@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zs ČSN">
+<meta name="theme-color" content="#0f3460">
+<link rel="manifest" href="manifest.json">
+<title>Výpočet Zs – ochranná smyčka</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #1f2937;
+    --border: #30363d;
+    --accent: #2563eb;
+    --accent2: #1d4ed8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --radius: 10px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    padding-top: calc(var(--safe-top) + 0px);
+    padding-bottom: calc(var(--safe-bot) + 16px);
+  }
+
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: calc(var(--safe-top) + 12px) 16px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header p  { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .tabs {
+    display: flex;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none; border-left: none; border-right: none;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  .section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .row {
+    display: flex; align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row label { font-size: 14px; flex: 1; color: var(--text); min-width: 0; }
+  .row .unit  { font-size: 12px; color: var(--text2); min-width: 32px; text-align: right; }
+  .row .hint  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .row-col { flex-direction: column; align-items: stretch; }
+  .row-col label { margin-bottom: 6px; }
+
+  input[type="number"], select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+    padding: 6px 10px;
+    width: 110px;
+    text-align: right;
+    -webkit-appearance: none; appearance: none;
+  }
+  select {
+    width: auto; min-width: 130px; text-align: left;
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+  .result-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 16px;
+  }
+  .result-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .result-card .label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .result-card .val   { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .result-card .val.ok      { color: var(--green); }
+  .result-card .val.fail    { color: var(--red); }
+  .result-card .val.neutral { color: var(--text); }
+  .result-card .val.accent  { color: var(--accent); }
+  .result-card .sub  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+  }
+  .badge.ok   { background: rgba(34,197,94,0.15);  color: var(--green); }
+  .badge.fail { background: rgba(239,68,68,0.15);  color: var(--red); }
+  .badge.warn { background: rgba(245,158,11,0.15); color: var(--yellow); }
+
+  .alert {
+    padding: 12px 14px; border-radius: var(--radius);
+    font-size: 13px; margin-bottom: 16px;
+    border: 1px solid; font-weight: 600;
+  }
+  .alert.ok   { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.3);  color: var(--green); }
+  .alert.fail { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3);  color: var(--red); }
+
+  .btn {
+    width: 100%; padding: 14px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius);
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    margin-bottom: 16px; transition: background 0.15s;
+  }
+  .btn:active { background: var(--accent2); }
+
+  /* Protocol */
+  .proto-section { margin-bottom: 16px; }
+  .proto-title {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text2); margin-bottom: 8px;
+  }
+  .proto-row {
+    display: flex; justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .proto-row:last-child { border-bottom: none; }
+  .proto-row .k { color: var(--text2); }
+  .proto-row .v { color: var(--text); font-weight: 500; }
+
+  @media print {
+    header, .tabs, .btn, #tab-vstup, #tab-vysledky { display: none !important; }
+    #tab-protokol { display: block !important; }
+    body { background: white; color: black; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Výpočet Zs – ochranná smyčka</h1>
+  <p>IEC 60364-4-41 / IEC 60364-6 · ČSN 33 2000-4-41 / ČSN 33 2000-6</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('vstup')">① Vstup</button>
+  <button class="tab"        onclick="showTab('vysledky')">② Výsledky</button>
+  <button class="tab"        onclick="showTab('protokol')">③ Protokol</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════ VSTUP ══ -->
+<div class="page active" id="tab-vstup">
+
+  <!-- 1 Síť -->
+  <div class="section">
+    <div class="section-title">1 · Parametry napájecí sítě</div>
+    <div class="row">
+      <label>Napětí U₀ (fáze–PE)</label>
+      <input type="number" id="u0" value="230" min="1">
+      <span class="unit">V</span>
+    </div>
+    <div class="row">
+      <label>Impedance sítě Znet<div class="hint">Měřeno na přípojnici L–PE nebo od PDS</div></label>
+      <input type="number" id="znet" value="0.35" step="0.001">
+      <span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Typ sítě</label>
+      <select id="sit">
+        <option value="TN-S">TN-S</option>
+        <option value="TN-C">TN-C</option>
+        <option value="TT">TT</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 2 Vodič -->
+  <div class="section">
+    <div class="section-title">2 · Vodič</div>
+    <div class="row">
+      <label>Průřez fázového vodiče A_faze</label>
+      <input type="number" id="a_faze" value="2.5" step="0.5" min="0.5">
+      <span class="unit">mm²</span>
+    </div>
+    <div class="row">
+      <label>Průřez PE vodiče A_PE</label>
+      <input type="number" id="a_pe" value="2.5" step="0.5" min="0.5">
+      <span class="unit">mm²</span>
+    </div>
+    <div class="row">
+      <label>Délka vedení L (jednosměrná)</label>
+      <input type="number" id="delka" value="30" min="1">
+      <span class="unit">m</span>
+    </div>
+    <div class="row">
+      <label>Materiál vodiče</label>
+      <select id="material" onchange="materialChange()">
+        <option value="Cu">Cu – měď</option>
+        <option value="Al">Al – hliník</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>ρ fázového vodiče<div class="hint">Cu=0.01724 / Al=0.02826</div></label>
+      <input type="number" id="rho_faze" value="0.01724" step="0.00001">
+      <span class="unit">Ω·mm²/m</span>
+    </div>
+    <div class="row">
+      <label>ρ PE vodiče<div class="hint">Cu=0.01724 / Al=0.02826</div></label>
+      <input type="number" id="rho_pe" value="0.01724" step="0.00001">
+      <span class="unit">Ω·mm²/m</span>
+    </div>
+    <div class="row">
+      <label>Reaktance vedení X<div class="hint">0.07–0.10 Ω/km typicky; 0 = zanedbat</div></label>
+      <input type="number" id="reaktance_km" value="0.08" step="0.01" min="0">
+      <span class="unit">Ω/km</span>
+    </div>
+  </div>
+
+  <!-- 3 Izolace -->
+  <div class="section">
+    <div class="section-title">3 · Izolace – teplotní korekce</div>
+    <div class="row">
+      <label>Typ izolace vodiče</label>
+      <select id="izolace">
+        <option value="1.24">PVC  70 °C → kt 1.24</option>
+        <option value="1.28">XLPE / EPR  90 °C → kt 1.28</option>
+        <option value="1.30">Minerální  105 °C → kt 1.30</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 4 Jistič -->
+  <div class="section">
+    <div class="section-title">4 · Jistící prvek</div>
+    <div class="row">
+      <label>Typ ochranného prvku</label>
+      <select id="typ_prvku" onchange="typPrvkuChange()">
+        <option value="MCB">MCB – jistič</option>
+        <option value="FUSE">Pojistka (gG / aM)</option>
+      </select>
+    </div>
+    <div id="blok-mcb">
+      <div class="row">
+        <label>Charakteristika MCB</label>
+        <select id="char_mcb">
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>Čas odpojení t<div class="hint">0.4 s = zásuvky / přenosné · 5 s = pevné</div></label>
+        <select id="cas_odp">
+          <option value="0.4">0.4 s</option>
+          <option value="5">5 s</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <label>Jmenovitý proud In</label>
+      <input type="number" id="in_jistic" value="16" min="1">
+      <span class="unit">A</span>
+    </div>
+    <div id="blok-ia-pojistka" style="display:none">
+      <div class="row">
+        <label>Vypínací proud Ia (pojistka – zadej ručně)</label>
+        <input type="number" id="ia_pojistka" value="160" min="1">
+        <span class="unit">A</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Identifikace -->
+  <div class="section">
+    <div class="section-title">Identifikace (volitelné)</div>
+    <div class="row row-col">
+      <label>Projekt</label>
+      <input type="text" id="projekt" placeholder="název projektu"
+        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
+    </div>
+    <div class="row row-col">
+      <label>Obvod / označení</label>
+      <input type="text" id="obvod" placeholder="např. B1.01 – zásuvky kuchyně"
+        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
+    </div>
+  </div>
+
+  <button class="btn" onclick="vypocitej()">Vypočítat Zs</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════ VÝSLEDKY ══ -->
+<div class="page" id="tab-vysledky">
+
+  <div id="alert-vysledek" class="alert ok" style="display:none"></div>
+
+  <div class="result-grid">
+    <div class="result-card">
+      <div class="label">Zs při 20 °C</div>
+      <div class="val neutral" id="r-zs20">–</div>
+      <div class="sub">Ω</div>
+    </div>
+    <div class="result-card">
+      <div class="label">Zs provozní (× kt)</div>
+      <div class="val accent" id="r-zsprov">–</div>
+      <div class="sub">Ω</div>
+    </div>
+    <div class="result-card">
+      <div class="label">Zs_max VÝPOČET</div>
+      <div class="val neutral" id="r-zsmax-vyp">–</div>
+      <div class="sub">2/3 · U₀/Ia · Ω</div>
+    </div>
+    <div class="result-card">
+      <div class="label">Zs_max MĚŘENÍ</div>
+      <div class="val neutral" id="r-zsmax-mer">–</div>
+      <div class="sub">U₀/Ia · Ω</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Podmínky automatického odpojení</div>
+    <div class="row">
+      <label>VÝPOČET: Zs(prov.) ≤ 2/3·U₀/Ia<div class="hint">IEC 60364-6 – projektová podmínka</div></label>
+      <span class="badge" id="b-vyp">–</span>
+    </div>
+    <div class="row">
+      <label>MĚŘENÍ: Zs(prov.) ≤ U₀/Ia<div class="hint">IEC 60364-6 – ověření na instalaci</div></label>
+      <span class="badge" id="b-mer">–</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Rozklad impedance smyčky</div>
+    <div class="row">
+      <label>Impedance sítě Znet</label>
+      <span id="r-znet">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Odpor fázového vodiče R_L</label>
+      <span id="r-rl">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Odpor PE vodiče R_PE</label>
+      <span id="r-rpe">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Reaktance smyčky X_s</label>
+      <span id="r-xs">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Odporová složka Rs (20°C)</label>
+      <span id="r-rs">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Teplotní koeficient kt</label>
+      <span id="r-kt">–</span>
+    </div>
+    <div class="row">
+      <label>Vypínací proud Ia</label>
+      <span id="r-ia">–</span><span class="unit">A</span>
+    </div>
+    <div class="row">
+      <label>Zkratový proud Ik (orientačně)</label>
+      <span id="r-ik">–</span><span class="unit">A</span>
+    </div>
+  </div>
+
+  <button class="btn" onclick="showTab('protokol')">Zobrazit protokol →</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PROTOKOL ══ -->
+<div class="page" id="tab-protokol">
+  <div id="protokol-obsah">
+    <p style="color:var(--text2);text-align:center;padding:32px 0">
+      Nejprve proveďte výpočet na záložce ① Vstup
+    </p>
+  </div>
+  <button class="btn" onclick="kopirujProtokolText()" style="background:var(--bg3);border:1px solid var(--border)">
+    📋 Kopírovat protokol (text)
+  </button>
+  <button class="btn" onclick="tiskPDF()">🖨 Tisk / Uložit PDF</button>
+</div>
+
+<script>
+// ═══════════════════════ VÝPOČTOVÉ JÁDRO ═══════════════════════
+
+var lastResult = null;
+
+function fmt(v, d) {
+  if (v === null || v === undefined || isNaN(v)) return '–';
+  return v.toFixed(d);
+}
+
+function getMcbNasobek(char, cas) {
+  var c = document.getElementById('char_mcb').value;
+  var t = parseFloat(document.getElementById('cas_odp').value);
+  if (c === 'B') return t <= 0.4 ? 5  : 3;
+  if (c === 'C') return t <= 0.4 ? 10 : 5;
+  if (c === 'D') return t <= 0.4 ? 20 : 10;
+  return 5;
+}
+
+function vypocitej() {
+  var u0    = parseFloat(document.getElementById('u0').value);
+  var znet  = parseFloat(document.getElementById('znet').value);
+  var aFaze = parseFloat(document.getElementById('a_faze').value);
+  var aPe   = parseFloat(document.getElementById('a_pe').value);
+  var delka = parseFloat(document.getElementById('delka').value);
+  var rhoF  = parseFloat(document.getElementById('rho_faze').value);
+  var rhoP  = parseFloat(document.getElementById('rho_pe').value);
+  var xKm   = parseFloat(document.getElementById('reaktance_km').value);
+  var kt    = parseFloat(document.getElementById('izolace').value);
+  var in_   = parseFloat(document.getElementById('in_jistic').value);
+  var sit   = document.getElementById('sit').value;
+  var typPrvku = document.getElementById('typ_prvku').value;
+
+  if ([u0,znet,aFaze,aPe,delka,rhoF,rhoP,kt,in_].some(isNaN)) {
+    alert('Zkontroluj vstupní hodnoty – některé pole je prázdné nebo neplatné.');
+    return;
+  }
+
+  // Ia
+  var ia;
+  if (typPrvku === 'MCB') {
+    ia = getMcbNasobek() * in_;
+  } else {
+    ia = parseFloat(document.getElementById('ia_pojistka').value);
+    if (isNaN(ia)) { alert('Zadej vypínací proud Ia pro pojistku.'); return; }
+  }
+
+  // Výpočet
+  var rl   = rhoF * delka / aFaze;
+  var rpe  = rhoP * delka / aPe;
+  var xs   = (xKm / 1000) * delka * 2;
+  var rs   = znet + rl + rpe;
+  var zs20 = Math.sqrt(rs * rs + xs * xs);
+  var zsProv = zs20 * kt;
+  var zsmaxVyp = (2/3) * u0 / ia;
+  var zsmaxMer = u0 / ia;
+  var ik   = u0 / zsProv;
+
+  var okVyp = zsProv <= zsmaxVyp;
+  var okMer = zsProv <= zsmaxMer;
+
+  var nasobek = (typPrvku === 'MCB') ? getMcbNasobek() : '–';
+
+  lastResult = {
+    u0: u0, znet: znet, aFaze: aFaze, aPe: aPe, delka: delka,
+    rhoF: rhoF, rhoP: rhoP, xKm: xKm, kt: kt, in_: in_, ia: ia,
+    sit: sit, typPrvku: typPrvku, nasobek: nasobek,
+    char: typPrvku === 'MCB' ? document.getElementById('char_mcb').value : '–',
+    casOdp: typPrvku === 'MCB' ? document.getElementById('cas_odp').value : '–',
+    izolaceLabel: document.getElementById('izolace').options[document.getElementById('izolace').selectedIndex].text,
+    material: document.getElementById('material').value,
+    rl: rl, rpe: rpe, xs: xs, rs: rs,
+    zs20: zs20, zsProv: zsProv,
+    zsmaxVyp: zsmaxVyp, zsmaxMer: zsmaxMer,
+    ik: ik, okVyp: okVyp, okMer: okMer,
+    projekt: document.getElementById('projekt').value,
+    obvod: document.getElementById('obvod').value,
+    datum: new Date().toLocaleDateString('cs-CZ')
+  };
+
+  renderVysledky(lastResult);
+  renderProtokolHTML(lastResult);
+  showTab('vysledky');
+}
+
+function renderVysledky(r) {
+  document.getElementById('r-zs20').textContent    = fmt(r.zs20, 3);
+  document.getElementById('r-zsprov').textContent  = fmt(r.zsProv, 3);
+  document.getElementById('r-zsmax-vyp').textContent = fmt(r.zsmaxVyp, 3);
+  document.getElementById('r-zsmax-mer').textContent = fmt(r.zsmaxMer, 3);
+  document.getElementById('r-znet').textContent    = fmt(r.znet, 3);
+  document.getElementById('r-rl').textContent      = fmt(r.rl, 4);
+  document.getElementById('r-rpe').textContent     = fmt(r.rpe, 4);
+  document.getElementById('r-xs').textContent      = fmt(r.xs, 4);
+  document.getElementById('r-rs').textContent      = fmt(r.rs, 4);
+  document.getElementById('r-kt').textContent      = fmt(r.kt, 2);
+  document.getElementById('r-ia').textContent      = fmt(r.ia, 0);
+  document.getElementById('r-ik').textContent      = fmt(r.ik, 0);
+
+  // Zs provozní barva
+  var zpEl = document.getElementById('r-zsprov');
+  zpEl.className = 'val ' + (r.okVyp ? 'ok' : (r.okMer ? 'warn' : 'fail'));
+
+  // Badges
+  setBadge('b-vyp', r.okVyp);
+  setBadge('b-mer', r.okMer);
+
+  // Celkový alert
+  var al = document.getElementById('alert-vysledek');
+  al.style.display = '';
+  if (r.okVyp) {
+    al.className = 'alert ok';
+    al.textContent = '✔ VYHOVUJE – podmínka výpočtu i měření splněna (Zs = ' + fmt(r.zsProv,3) + ' Ω ≤ ' + fmt(r.zsmaxVyp,3) + ' Ω)';
+  } else if (r.okMer) {
+    al.className = 'alert warn';
+    al.style.background = 'rgba(245,158,11,0.1)';
+    al.style.borderColor = 'rgba(245,158,11,0.3)';
+    al.style.color = 'var(--yellow)';
+    al.textContent = '⚠ POZOR – vyhovuje jen podmínce měření, nikoliv výpočtové podmínce 2/3 (Zs = ' + fmt(r.zsProv,3) + ' Ω)';
+  } else {
+    al.className = 'alert fail';
+    al.textContent = '✘ NEVYHOVUJE – podmínka automatického odpojení není splněna (Zs = ' + fmt(r.zsProv,3) + ' Ω > ' + fmt(r.zsmaxMer,3) + ' Ω)';
+  }
+}
+
+function setBadge(id, ok) {
+  var el = document.getElementById(id);
+  el.className = 'badge ' + (ok ? 'ok' : 'fail');
+  el.textContent = ok ? '✔ VYHOVUJE' : '✘ NEVYHOVUJE';
+}
+
+function renderProtokolHTML(r) {
+  var gC = function(ok) { return ok ? 'var(--green)' : 'var(--red)'; };
+  var gT = function(ok) { return ok ? '✔ VYHOVUJE' : '✘ NEVYHOVUJE'; };
+
+  var html = '<div class="section proto-section">'
+    + '<div class="section-title">IDENTIFIKACE</div>'
+    + row('Projekt',  r.projekt || '–')
+    + row('Obvod',    r.obvod   || '–')
+    + row('Datum',    r.datum)
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">A) Parametry napájecí sítě</div>'
+    + row('Typ sítě',      r.sit)
+    + row('Napětí U₀',     r.u0 + ' V')
+    + row('Impedance Znet', fmt(r.znet,3) + ' Ω')
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">B) Parametry vodiče</div>'
+    + row('Materiál',             r.material)
+    + row('Průřez fázový A_faze', r.aFaze + ' mm²')
+    + row('Průřez PE A_PE',       r.aPe   + ' mm²')
+    + row('Délka vedení L',       r.delka + ' m')
+    + row('ρ fázového vodiče',    fmt(r.rhoF,5) + ' Ω·mm²/m')
+    + row('ρ PE vodiče',          fmt(r.rhoP,5) + ' Ω·mm²/m')
+    + row('Reaktance X',          fmt(r.xKm,3)  + ' Ω/km')
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">C) Izolace – teplotní korekce</div>'
+    + row('Typ izolace',           r.izolaceLabel)
+    + row('Teplotní koef. kt',     fmt(r.kt,2))
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">D) Jistící prvek</div>'
+    + row('Typ prvku',             r.typPrvku)
+    + row('Charakteristika',       r.char)
+    + row('Čas odpojení t',        r.casOdp + ' s')
+    + row('Jmenovitý proud In',    fmt(r.in_,0) + ' A')
+    + row('Násobek Ia',            r.typPrvku === 'MCB' ? (r.nasobek + ' × In') : '–')
+    + row('Vypínací proud Ia',     fmt(r.ia,0) + ' A')
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">E) Rozklad impedance smyčky</div>'
+    + row('Odpor R_L (fázový)',    fmt(r.rl,4)  + ' Ω')
+    + row('Odpor R_PE',            fmt(r.rpe,4) + ' Ω')
+    + row('Reaktance X_s',         fmt(r.xs,4)  + ' Ω')
+    + row('Rs odporová složka',    fmt(r.rs,4)  + ' Ω')
+    + row('Zs při 20 °C',          fmt(r.zs20,4) + ' Ω')
+    + row('Zs provozní (× kt)',    fmt(r.zsProv,4) + ' Ω')
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">F) Posouzení automatického odpojení (IEC 60364-4-41 / IEC 60364-6)</div>'
+    + row('Zs_max VÝPOČET (2/3·U₀/Ia)', fmt(r.zsmaxVyp,3) + ' Ω')
+    + '<div class="proto-row" style="background:rgba(0,0,0,0.2)">'
+    + '<span class="k" style="font-weight:600">Zs(prov.) ≤ Zs_max(2/3) – VÝPOČET</span>'
+    + '<span class="v" style="color:' + gC(r.okVyp) + ';font-weight:700">' + gT(r.okVyp) + '</span>'
+    + '</div>'
+    + row('Zs_max MĚŘENÍ (U₀/Ia)',      fmt(r.zsmaxMer,3) + ' Ω')
+    + '<div class="proto-row" style="background:rgba(0,0,0,0.2)">'
+    + '<span class="k" style="font-weight:600">Zs(prov.) ≤ Zs_max – MĚŘENÍ</span>'
+    + '<span class="v" style="color:' + gC(r.okMer) + ';font-weight:700">' + gT(r.okMer) + '</span>'
+    + '</div>'
+    + row('Zkratový proud Ik (orient.)', fmt(r.ik,0) + ' A')
+    + '</div>'
+
+    + '<div class="section proto-section">'
+    + '<div class="section-title">CELKOVÉ POSOUZENÍ</div>'
+    + '<div class="row" style="background:' + (r.okVyp ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)') + '">'
+    + '<span style="font-size:15px;font-weight:700;color:' + gC(r.okVyp) + '">'
+    + (r.okVyp
+        ? '✔ VYHOVUJE – Zs ' + fmt(r.zsProv,3) + ' Ω splňuje podmínku výpočtu i měření dle IEC 60364-6'
+        : (r.okMer
+            ? '⚠ POZOR – splňuje jen podmínku měření, ne výpočtovou podmínku 2/3 dle IEC 60364-6'
+            : '✘ NEVYHOVUJE – podmínka automatického odpojení není splněna'))
+    + '</span></div>'
+    + '</div>';
+
+  document.getElementById('protokol-obsah').innerHTML = html;
+}
+
+function row(k, v) {
+  return '<div class="proto-row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+}
+
+function kopirujProtokolText() {
+  if (!lastResult) { alert('Nejprve proveďte výpočet'); return; }
+  var r = lastResult;
+  var gT = function(ok) { return ok ? '✔ VYHOVUJE' : '✘ NEVYHOVUJE'; };
+  var text = 'PROTOKOL O VÝPOČTU IMPEDANCE OCHRANNÉ SMYČKY Zs\n'
+    + 'IEC 60364-4-41 / IEC 60364-6  ·  ČSN 33 2000-4-41 / ČSN 33 2000-6\n'
+    + '─────────────────────────────────────────────────────\n\n'
+    + 'IDENTIFIKACE\n'
+    + 'Projekt: ' + (r.projekt || '–') + '\n'
+    + 'Obvod:   ' + (r.obvod   || '–') + '\n'
+    + 'Datum:   ' + r.datum + '\n\n'
+    + 'A) NAPÁJECÍ SÍŤ\n'
+    + 'Typ sítě:    ' + r.sit + '\n'
+    + 'U₀:          ' + r.u0 + ' V\n'
+    + 'Znet:        ' + fmt(r.znet,3) + ' Ω\n\n'
+    + 'B) VODIČ\n'
+    + 'Materiál:    ' + r.material + '\n'
+    + 'A_faze:      ' + r.aFaze + ' mm²\n'
+    + 'A_PE:        ' + r.aPe   + ' mm²\n'
+    + 'Délka L:     ' + r.delka + ' m\n'
+    + 'ρ fáze:      ' + fmt(r.rhoF,5) + ' Ω·mm²/m\n'
+    + 'ρ PE:        ' + fmt(r.rhoP,5) + ' Ω·mm²/m\n'
+    + 'Reaktance X: ' + fmt(r.xKm,3) + ' Ω/km\n\n'
+    + 'C) IZOLACE\n'
+    + 'Typ: ' + r.izolaceLabel + '  kt = ' + fmt(r.kt,2) + '\n\n'
+    + 'D) JISTÍCÍ PRVEK\n'
+    + 'Typ:   ' + r.typPrvku + '  ' + r.char + '\n'
+    + 'In:    ' + fmt(r.in_,0) + ' A\n'
+    + 'Ia:    ' + fmt(r.ia,0)  + ' A\n'
+    + 't:     ' + r.casOdp + ' s\n\n'
+    + 'E) IMPEDANCE SMYČKY\n'
+    + 'R_L:      ' + fmt(r.rl,4)    + ' Ω\n'
+    + 'R_PE:     ' + fmt(r.rpe,4)   + ' Ω\n'
+    + 'X_s:      ' + fmt(r.xs,4)    + ' Ω\n'
+    + 'Rs(20°C): ' + fmt(r.rs,4)    + ' Ω\n'
+    + 'Zs(20°C): ' + fmt(r.zs20,4)  + ' Ω\n'
+    + 'Zs(prov): ' + fmt(r.zsProv,4)+ ' Ω\n\n'
+    + 'F) POSOUZENÍ\n'
+    + 'Zs_max VÝPOČET (2/3·U₀/Ia): ' + fmt(r.zsmaxVyp,3) + ' Ω  →  ' + gT(r.okVyp) + '\n'
+    + 'Zs_max MĚŘENÍ  (U₀/Ia):     ' + fmt(r.zsmaxMer,3) + ' Ω  →  ' + gT(r.okMer) + '\n'
+    + 'Ik (orient.):               ' + fmt(r.ik,0) + ' A\n\n'
+    + 'VÝSLEDEK: ' + gT(r.okVyp) + '\n';
+
+  navigator.clipboard.writeText(text)
+    .then(function() { alert('✔ Protokol zkopírován do schránky'); })
+    .catch(function() { alert('Nelze kopírovat – zkuste ručně'); });
+}
+
+function tiskPDF() {
+  if (!lastResult) { alert('Nejprve proveďte výpočet'); return; }
+  renderProtokolHTML(lastResult);
+  setTimeout(function() { window.print(); }, 100);
+}
+
+// ═══════════════════════ UI HELPERS ═══════════════════════
+
+function showTab(id) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  var tabs = document.querySelectorAll('.tab');
+  var map = { vstup: 0, vysledky: 1, protokol: 2 };
+  if (map[id] !== undefined) tabs[map[id]].classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function materialChange() {
+  var m = document.getElementById('material').value;
+  var rho = m === 'Cu' ? 0.01724 : 0.02826;
+  document.getElementById('rho_faze').value = rho;
+  document.getElementById('rho_pe').value   = rho;
+}
+
+function typPrvkuChange() {
+  var t = document.getElementById('typ_prvku').value;
+  document.getElementById('blok-mcb').style.display         = t === 'MCB'  ? '' : 'none';
+  document.getElementById('blok-ia-pojistka').style.display = t === 'FUSE' ? '' : 'none';
+}
+
+// Service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+
+// Expose
+window.vypocitej         = vypocitej;
+window.showTab           = showTab;
+window.materialChange    = materialChange;
+window.typPrvkuChange    = typPrvkuChange;
+window.tiskPDF           = tiskPDF;
+window.kopirujProtokolText = kopirujProtokolText;
+</script>
+</body>
+</html>
