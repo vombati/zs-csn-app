@@ -202,6 +202,54 @@
 <!-- ═══════════════════════════════════════════════ VSTUP ══ -->
 <div class="page active" id="tab-vstup">
 
+  <!-- Identifikace -->
+  <div class="section">
+    <div class="section-title">Identifikace (volitelné)</div>
+    <div class="row row-col">
+      <label>Projekt</label>
+      <input type="text" id="projekt" placeholder="název projektu"
+        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
+    </div>
+    <div class="row row-col">
+      <label>Obvod / označení</label>
+      <input type="text" id="obvod" placeholder="např. B1.01 – zásuvky kuchyně"
+        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
+    </div>
+    <div class="row row-col">
+      <label>Revizní technik</label>
+      <input type="text" id="revizak" placeholder="jméno a příjmení"
+        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
+    </div>
+  </div>
+
+  <!-- Revizní měření -->
+  <div class="section">
+    <div class="section-title">Revizní měření (naměřená hodnota)</div>
+    <div class="row">
+      <label>Naměřená Zs<div class="hint">Hodnota z přístroje (Profitest, MIC, MZC apod.)</div></label>
+      <input type="number" id="zs_merena" placeholder="–" step="0.001" min="0">
+      <span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Přístroj / typ měřidla</label>
+      <select id="pristroj">
+        <option value="">– nevyplněno –</option>
+        <option value="Gossen Metrawatt Profitest MXTRA">Gossen Metrawatt Profitest MXTRA</option>
+        <option value="Gossen Metrawatt Profitest 0100S-II">Gossen Metrawatt Profitest 0100S-II</option>
+        <option value="Metrel MI 3102H">Metrel MI 3102H</option>
+        <option value="Metrel MI 3152">Metrel MI 3152</option>
+        <option value="Fluke 1664 FC">Fluke 1664 FC</option>
+        <option value="Kyoritsu KEW 6016A">Kyoritsu KEW 6016A</option>
+        <option value="jiný">Jiný (doplň do protokolu)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Číslo měřidla / kalibrace</label>
+      <input type="text" id="pristroj_sn" placeholder="ev. č. nebo datum kalibrace"
+        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;width:auto;flex:1;">
+    </div>
+  </div>
+
   <!-- 1 Síť -->
   <div class="section">
     <div class="section-title">1 · Parametry napájecí sítě</div>
@@ -321,21 +369,6 @@
     </div>
   </div>
 
-  <!-- Identifikace -->
-  <div class="section">
-    <div class="section-title">Identifikace (volitelné)</div>
-    <div class="row row-col">
-      <label>Projekt</label>
-      <input type="text" id="projekt" placeholder="název projektu"
-        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
-    </div>
-    <div class="row row-col">
-      <label>Obvod / označení</label>
-      <input type="text" id="obvod" placeholder="např. B1.01 – zásuvky kuchyně"
-        style="width:100%;text-align:left;font-size:14px;padding:8px 10px;">
-    </div>
-  </div>
-
   <button class="btn" onclick="vypocitej()">Vypočítat Zs</button>
 </div>
 
@@ -370,12 +403,40 @@
   <div class="section">
     <div class="section-title">Podmínky automatického odpojení</div>
     <div class="row">
-      <label>VÝPOČET: Zs(prov.) ≤ 2/3·U₀/Ia<div class="hint">IEC 60364-6 – projektová podmínka</div></label>
+      <label>VÝPOČET: Zs(výp.) ≤ 2/3·U₀/Ia<div class="hint">IEC 60364-6 – projektová podmínka</div></label>
       <span class="badge" id="b-vyp">–</span>
     </div>
     <div class="row">
-      <label>MĚŘENÍ: Zs(prov.) ≤ U₀/Ia<div class="hint">IEC 60364-6 – ověření na instalaci</div></label>
+      <label>VÝPOČET: Zs(výp.) ≤ U₀/Ia<div class="hint">IEC 60364-6 – bez koef. 2/3</div></label>
       <span class="badge" id="b-mer">–</span>
+    </div>
+    <div class="row" id="row-b-revize" style="display:none">
+      <label>REVIZE: Zs(měř.) ≤ U₀/Ia<div class="hint">Naměřená hodnota vs. podmínka měření</div></label>
+      <span class="badge" id="b-revize">–</span>
+    </div>
+  </div>
+
+  <div class="section" id="sekce-mereni" style="display:none">
+    <div class="section-title">Porovnání výpočet vs. revizní měření</div>
+    <div class="row">
+      <label>Zs vypočtená (provozní)</label>
+      <span id="r-zsprov2">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Zs naměřená (přístroj)</label>
+      <span id="r-zsmer" style="font-weight:700;color:var(--yellow)">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Rozdíl Zs(měř.) − Zs(výp.)</label>
+      <span id="r-zsdiff">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Zs_max MĚŘENÍ (U₀/Ia)</label>
+      <span id="r-zsmax-mer2">–</span><span class="unit">Ω</span>
+    </div>
+    <div class="row">
+      <label>Rezerva do Zs_max</label>
+      <span id="r-rezerva">–</span><span class="unit">Ω</span>
     </div>
   </div>
 
@@ -494,6 +555,13 @@ function vypocitej() {
 
   var nasobek = (typPrvku === 'MCB') ? getMcbNasobek() : '–';
 
+  // Revizní měření
+  var zsMerenaRaw = document.getElementById('zs_merena').value;
+  var zsMerena    = zsMerenaRaw !== '' ? parseFloat(zsMerenaRaw) : null;
+  var okRevize    = zsMerena !== null ? zsMerena <= zsmaxMer : null;
+  var zsDiff      = zsMerena !== null ? zsMerena - zsProv : null;
+  var rezerva     = zsMerena !== null ? zsmaxMer - zsMerena : null;
+
   lastResult = {
     u0: u0, znet: znet, aFaze: aFaze, aPe: aPe, delka: delka,
     rhoF: rhoF, rhoP: rhoP, xKm: xKm, kt: kt, in_: in_, ia: ia,
@@ -506,9 +574,14 @@ function vypocitej() {
     zs20: zs20, zsProv: zsProv,
     zsmaxVyp: zsmaxVyp, zsmaxMer: zsmaxMer,
     ik: ik, okVyp: okVyp, okMer: okMer,
+    zsMerena: zsMerena, okRevize: okRevize,
+    zsDiff: zsDiff, rezerva: rezerva,
+    pristroj:    document.getElementById('pristroj').value,
+    pristrojSn:  document.getElementById('pristroj_sn').value,
+    revizak:     document.getElementById('revizak').value,
     projekt: document.getElementById('projekt').value,
-    obvod: document.getElementById('obvod').value,
-    datum: new Date().toLocaleDateString('cs-CZ')
+    obvod:   document.getElementById('obvod').value,
+    datum:   new Date().toLocaleDateString('cs-CZ')
   };
 
   renderVysledky(lastResult);
@@ -519,14 +592,31 @@ function vypocitej() {
 function renderVysledky(r) {
   document.getElementById('r-zs20').textContent    = fmt(r.zs20, 3);
   document.getElementById('r-zsprov').textContent  = fmt(r.zsProv, 3);
+  document.getElementById('r-zsprov2').textContent = fmt(r.zsProv, 3);
   document.getElementById('r-zsmax-vyp').textContent = fmt(r.zsmaxVyp, 3);
   document.getElementById('r-zsmax-mer').textContent = fmt(r.zsmaxMer, 3);
+  document.getElementById('r-zsmax-mer2').textContent = fmt(r.zsmaxMer, 3);
   document.getElementById('r-znet').textContent    = fmt(r.znet, 3);
   document.getElementById('r-rl').textContent      = fmt(r.rl, 4);
   document.getElementById('r-rpe').textContent     = fmt(r.rpe, 4);
   document.getElementById('r-xs').textContent      = fmt(r.xs, 4);
   document.getElementById('r-rs').textContent      = fmt(r.rs, 4);
   document.getElementById('r-kt').textContent      = fmt(r.kt, 2);
+
+  // Naměřená hodnota
+  var hasMer = r.zsMerena !== null;
+  document.getElementById('row-b-revize').style.display  = hasMer ? '' : 'none';
+  document.getElementById('sekce-mereni').style.display  = hasMer ? '' : 'none';
+  if (hasMer) {
+    document.getElementById('r-zsmer').textContent   = fmt(r.zsMerena, 3);
+    var diffEl = document.getElementById('r-zsdiff');
+    diffEl.textContent = (r.zsDiff >= 0 ? '+' : '') + fmt(r.zsDiff, 3);
+    diffEl.style.color = r.zsDiff > 0.1 ? 'var(--yellow)' : 'var(--green)';
+    var rezEl = document.getElementById('r-rezerva');
+    rezEl.textContent = fmt(r.rezerva, 3);
+    rezEl.style.color = r.rezerva >= 0 ? 'var(--green)' : 'var(--red)';
+    setBadge('b-revize', r.okRevize);
+  }
   document.getElementById('r-ia').textContent      = fmt(r.ia, 0);
   document.getElementById('r-ik').textContent      = fmt(r.ik, 0);
 
@@ -538,21 +628,27 @@ function renderVysledky(r) {
   setBadge('b-vyp', r.okVyp);
   setBadge('b-mer', r.okMer);
 
-  // Celkový alert
+  // Celkový alert – bere v potaz i naměřenou hodnotu
   var al = document.getElementById('alert-vysledek');
   al.style.display = '';
-  if (r.okVyp) {
-    al.className = 'alert ok';
-    al.textContent = '✔ VYHOVUJE – podmínka výpočtu i měření splněna (Zs = ' + fmt(r.zsProv,3) + ' Ω ≤ ' + fmt(r.zsmaxVyp,3) + ' Ω)';
-  } else if (r.okMer) {
+  al.style.background = ''; al.style.borderColor = ''; al.style.color = '';
+  var merFail = r.zsMerena !== null && !r.okRevize;
+  if (!r.okMer || merFail) {
+    al.className = 'alert fail';
+    al.textContent = '✘ NEVYHOVUJE – podmínka automatického odpojení není splněna (Zs = '
+      + (r.zsMerena !== null ? fmt(r.zsMerena,3) + ' Ω naměř.' : fmt(r.zsProv,3) + ' Ω výp.')
+      + ' > ' + fmt(r.zsmaxMer,3) + ' Ω)';
+  } else if (!r.okVyp) {
     al.className = 'alert warn';
     al.style.background = 'rgba(245,158,11,0.1)';
     al.style.borderColor = 'rgba(245,158,11,0.3)';
     al.style.color = 'var(--yellow)';
-    al.textContent = '⚠ POZOR – vyhovuje jen podmínce měření, nikoliv výpočtové podmínce 2/3 (Zs = ' + fmt(r.zsProv,3) + ' Ω)';
+    al.textContent = '⚠ POZOR – vyhovuje podmínce měření, ale ne výpočtové podmínce 2/3 dle IEC 60364-6 (Zs výp. = ' + fmt(r.zsProv,3) + ' Ω)';
   } else {
-    al.className = 'alert fail';
-    al.textContent = '✘ NEVYHOVUJE – podmínka automatického odpojení není splněna (Zs = ' + fmt(r.zsProv,3) + ' Ω > ' + fmt(r.zsmaxMer,3) + ' Ω)';
+    al.className = 'alert ok';
+    al.textContent = '✔ VYHOVUJE – Zs výp. = ' + fmt(r.zsProv,3) + ' Ω'
+      + (r.zsMerena !== null ? '   |   Zs měř. = ' + fmt(r.zsMerena,3) + ' Ω' : '')
+      + '   ≤   Zs_max = ' + fmt(r.zsmaxVyp,3) + ' Ω';
   }
 }
 
@@ -568,9 +664,10 @@ function renderProtokolHTML(r) {
 
   var html = '<div class="section proto-section">'
     + '<div class="section-title">IDENTIFIKACE</div>'
-    + row('Projekt',  r.projekt || '–')
-    + row('Obvod',    r.obvod   || '–')
-    + row('Datum',    r.datum)
+    + row('Projekt',          r.projekt  || '–')
+    + row('Obvod',            r.obvod    || '–')
+    + row('Revizní technik',  r.revizak  || '–')
+    + row('Datum',            r.datum)
     + '</div>'
 
     + '<div class="section proto-section">'
@@ -619,28 +716,46 @@ function renderProtokolHTML(r) {
 
     + '<div class="section proto-section">'
     + '<div class="section-title">F) Posouzení automatického odpojení (IEC 60364-4-41 / IEC 60364-6)</div>'
-    + row('Zs_max VÝPOČET (2/3·U₀/Ia)', fmt(r.zsmaxVyp,3) + ' Ω')
+    + row('Zs vypočtená – provozní',      fmt(r.zsProv,4) + ' Ω')
+    + row('Zs_max VÝPOČET (2/3·U₀/Ia)',  fmt(r.zsmaxVyp,3) + ' Ω')
     + '<div class="proto-row" style="background:rgba(0,0,0,0.2)">'
-    + '<span class="k" style="font-weight:600">Zs(prov.) ≤ Zs_max(2/3) – VÝPOČET</span>'
+    + '<span class="k" style="font-weight:600">Zs(výp.) ≤ Zs_max(2/3) – VÝPOČET</span>'
     + '<span class="v" style="color:' + gC(r.okVyp) + ';font-weight:700">' + gT(r.okVyp) + '</span>'
     + '</div>'
-    + row('Zs_max MĚŘENÍ (U₀/Ia)',      fmt(r.zsmaxMer,3) + ' Ω')
+    + row('Zs_max MĚŘENÍ (U₀/Ia)',        fmt(r.zsmaxMer,3) + ' Ω')
     + '<div class="proto-row" style="background:rgba(0,0,0,0.2)">'
-    + '<span class="k" style="font-weight:600">Zs(prov.) ≤ Zs_max – MĚŘENÍ</span>'
+    + '<span class="k" style="font-weight:600">Zs(výp.) ≤ Zs_max – bez koef. 2/3</span>'
     + '<span class="v" style="color:' + gC(r.okMer) + ';font-weight:700">' + gT(r.okMer) + '</span>'
     + '</div>'
-    + row('Zkratový proud Ik (orient.)', fmt(r.ik,0) + ' A')
+    + row('Zkratový proud Ik (orient.)',  fmt(r.ik,0) + ' A')
     + '</div>'
+
+    + (r.zsMerena !== null
+      ? '<div class="section proto-section">'
+        + '<div class="section-title">G) Revizní měření – naměřená hodnota</div>'
+        + row('Přístroj',               r.pristroj || '–')
+        + row('Ev. č. / kalibrace',     r.pristrojSn || '–')
+        + row('Zs naměřená',            fmt(r.zsMerena,3) + ' Ω')
+        + row('Rozdíl Zs(měř.)−Zs(výp.)', (r.zsDiff >= 0 ? '+' : '') + fmt(r.zsDiff,3) + ' Ω')
+        + row('Rezerva do Zs_max',      fmt(r.rezerva,3) + ' Ω')
+        + '<div class="proto-row" style="background:rgba(0,0,0,0.2)">'
+        + '<span class="k" style="font-weight:600">Zs(měř.) ≤ Zs_max – REVIZE</span>'
+        + '<span class="v" style="color:' + gC(r.okRevize) + ';font-weight:700">' + gT(r.okRevize) + '</span>'
+        + '</div>'
+        + '</div>'
+      : '')
 
     + '<div class="section proto-section">'
     + '<div class="section-title">CELKOVÉ POSOUZENÍ</div>'
-    + '<div class="row" style="background:' + (r.okVyp ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)') + '">'
-    + '<span style="font-size:15px;font-weight:700;color:' + gC(r.okVyp) + '">'
-    + (r.okVyp
-        ? '✔ VYHOVUJE – Zs ' + fmt(r.zsProv,3) + ' Ω splňuje podmínku výpočtu i měření dle IEC 60364-6'
-        : (r.okMer
+    + '<div class="row" style="background:' + ((r.okVyp && (r.zsMerena === null || r.okRevize)) ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)') + '">'
+    + '<span style="font-size:15px;font-weight:700;color:' + gC(r.okVyp && (r.zsMerena === null || r.okRevize)) + '">'
+    + ((!r.okMer || (r.zsMerena !== null && !r.okRevize))
+        ? '✘ NEVYHOVUJE – podmínka automatického odpojení není splněna'
+        : (!r.okVyp
             ? '⚠ POZOR – splňuje jen podmínku měření, ne výpočtovou podmínku 2/3 dle IEC 60364-6'
-            : '✘ NEVYHOVUJE – podmínka automatického odpojení není splněna'))
+            : ('✔ VYHOVUJE – Zs výp. = ' + fmt(r.zsProv,3) + ' Ω'
+              + (r.zsMerena !== null ? '  |  Zs měř. = ' + fmt(r.zsMerena,3) + ' Ω' : '')
+              + '  ≤  Zs_max = ' + fmt(r.zsmaxVyp,3) + ' Ω  dle IEC 60364-6')))
     + '</span></div>'
     + '</div>';
 
@@ -659,9 +774,10 @@ function kopirujProtokolText() {
     + 'IEC 60364-4-41 / IEC 60364-6  ·  ČSN 33 2000-4-41 / ČSN 33 2000-6\n'
     + '─────────────────────────────────────────────────────\n\n'
     + 'IDENTIFIKACE\n'
-    + 'Projekt: ' + (r.projekt || '–') + '\n'
-    + 'Obvod:   ' + (r.obvod   || '–') + '\n'
-    + 'Datum:   ' + r.datum + '\n\n'
+    + 'Projekt:          ' + (r.projekt  || '–') + '\n'
+    + 'Obvod:            ' + (r.obvod    || '–') + '\n'
+    + 'Revizní technik:  ' + (r.revizak  || '–') + '\n'
+    + 'Datum:            ' + r.datum + '\n\n'
     + 'A) NAPÁJECÍ SÍŤ\n'
     + 'Typ sítě:    ' + r.sit + '\n'
     + 'U₀:          ' + r.u0 + ' V\n'
@@ -691,8 +807,17 @@ function kopirujProtokolText() {
     + 'F) POSOUZENÍ\n'
     + 'Zs_max VÝPOČET (2/3·U₀/Ia): ' + fmt(r.zsmaxVyp,3) + ' Ω  →  ' + gT(r.okVyp) + '\n'
     + 'Zs_max MĚŘENÍ  (U₀/Ia):     ' + fmt(r.zsmaxMer,3) + ' Ω  →  ' + gT(r.okMer) + '\n'
-    + 'Ik (orient.):               ' + fmt(r.ik,0) + ' A\n\n'
-    + 'VÝSLEDEK: ' + gT(r.okVyp) + '\n';
+    + 'Ik (orient.):               ' + fmt(r.ik,0) + ' A\n'
+    + (r.zsMerena !== null
+      ? '\nG) REVIZNÍ MĚŘENÍ\n'
+        + 'Přístroj:       ' + (r.pristroj  || '–') + '\n'
+        + 'Ev.č./kal.:     ' + (r.pristrojSn || '–') + '\n'
+        + 'Zs naměřená:    ' + fmt(r.zsMerena,3) + ' Ω\n'
+        + 'Rozdíl měř−výp: ' + (r.zsDiff >= 0 ? '+' : '') + fmt(r.zsDiff,3) + ' Ω\n'
+        + 'Rezerva:        ' + fmt(r.rezerva,3) + ' Ω\n'
+        + 'Zs(měř.) ≤ Zs_max: ' + gT(r.okRevize) + '\n'
+      : '')
+    + '\nVÝSLEDEK: ' + gT(r.okVyp && (r.zsMerena === null || r.okRevize)) + '\n';
 
   navigator.clipboard.writeText(text)
     .then(function() { alert('✔ Protokol zkopírován do schránky'); })
