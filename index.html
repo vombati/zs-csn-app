@@ -394,7 +394,7 @@
       <div class="sub">2/3 · U₀/Ia · Ω</div>
     </div>
     <div class="result-card">
-      <div class="label">Zs_max MĚŘENÍ</div>
+      <div class="label">Zs_max REFERENČNÍ</div>
       <div class="val neutral" id="r-zsmax-mer">–</div>
       <div class="sub">U₀/Ia · Ω</div>
     </div>
@@ -431,7 +431,7 @@
       <span id="r-zsdiff">–</span><span class="unit">Ω</span>
     </div>
     <div class="row">
-      <label>Zs_max MĚŘENÍ (U₀/Ia)</label>
+      <label>Zs_max REFERENČNÍ (U₀/Ia)</label>
       <span id="r-zsmax-mer2">–</span><span class="unit">Ω</span>
     </div>
     <div class="row">
@@ -722,7 +722,7 @@ function renderProtokolHTML(r) {
     + '<span class="k" style="font-weight:600">Zs(výp.) ≤ Zs_max(2/3) – VÝPOČET</span>'
     + '<span class="v" style="color:' + gC(r.okVyp) + ';font-weight:700">' + gT(r.okVyp) + '</span>'
     + '</div>'
-    + row('Zs_max MĚŘENÍ (U₀/Ia)',        fmt(r.zsmaxMer,3) + ' Ω')
+    + row('Zs_max REFERENČNÍ (U₀/Ia)',      fmt(r.zsmaxMer,3) + ' Ω')
     + '<div class="proto-row" style="background:rgba(0,0,0,0.2)">'
     + '<span class="k" style="font-weight:600">Zs(výp.) ≤ Zs_max – bez koef. 2/3</span>'
     + '<span class="v" style="color:' + gC(r.okMer) + ';font-weight:700">' + gT(r.okMer) + '</span>'
@@ -806,7 +806,7 @@ function kopirujProtokolText() {
     + 'Zs(prov): ' + fmt(r.zsProv,4)+ ' Ω\n\n'
     + 'F) POSOUZENÍ\n'
     + 'Zs_max VÝPOČET (2/3·U₀/Ia): ' + fmt(r.zsmaxVyp,3) + ' Ω  →  ' + gT(r.okVyp) + '\n'
-    + 'Zs_max MĚŘENÍ  (U₀/Ia):     ' + fmt(r.zsmaxMer,3) + ' Ω  →  ' + gT(r.okMer) + '\n'
+    + 'Zs_max REFERENČNÍ (U₀/Ia): ' + fmt(r.zsmaxMer,3) + ' Ω  →  ' + gT(r.okMer) + '\n'
     + 'Ik (orient.):               ' + fmt(r.ik,0) + ' A\n'
     + (r.zsMerena !== null
       ? '\nG) REVIZNÍ MĚŘENÍ\n'
