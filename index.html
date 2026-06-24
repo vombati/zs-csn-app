@@ -192,11 +192,11 @@
       line-height: 1.3 !important;
     }
 
-    /* Všechny sekce – bílé pozadí, tmavé ohraničení */
-    .section, .proto-section, .result-card {
-      background: #fff !important;
+    /* Sekce */
+    .section, .proto-section {
       border: 0.5pt solid #bbb !important;
       border-radius: 0 !important;
+      background: #fff !important;
       margin-bottom: 2.5mm !important;
       page-break-inside: avoid;
     }
@@ -208,8 +208,9 @@
       padding: 2mm 3mm !important;
       border-bottom: 0.5pt solid #bbb !important;
     }
+
+    /* Řádky */
     .row {
-      background: #fff !important;
       padding: 1.5mm 3mm !important;
       border-bottom: 0.3pt solid #ddd !important;
       font-size: 8pt !important;
@@ -218,24 +219,42 @@
       gap: 4mm;
     }
     .row:last-child { border-bottom: none !important; }
-    .k { color: #444 !important; font-size: 8pt !important; }
-    .v { color: #000 !important; font-weight: 600 !important; font-size: 8pt !important; }
+    .k, .v, label, span { color: #000 !important; font-size: 8pt !important; }
+    .k { color: #444 !important; }
+    .v { font-weight: 600 !important; }
 
-    /* Výsledkové řádky */
-    .proto-row {
-      background: #fff !important;
-      padding: 1.5mm 3mm !important;
-      border-bottom: 0.3pt solid #ddd !important;
-      font-size: 8pt !important;
+    /* Výsledkové řádky s barvou */
+    .row [style*="var(--green)"], .row [style*="green"] { color: #1a6b2a !important; }
+    .row [style*="var(--red)"],   .row [style*="red"]   { color: #b00000 !important; }
+
+    /* Razítko + podpis – zmenšit */
+    .razitko-row {
+      display: flex !important;
+      gap: 6mm;
+      align-items: flex-start;
+      padding: 3mm !important;
     }
-
-    /* Barvy výsledků pro tisk */
-    [style*="var(--green)"] { color: #1a6b2a !important; }
-    [style*="var(--red)"]   { color: #b00000 !important; }
-    [style*="var(--yellow)"]{ color: #7a5000 !important; }
+    .razitko-row img {
+      width: 28mm !important;
+      height: 28mm !important;
+    }
+    .razitko-row .podpis-line {
+      border-bottom: 0.5pt solid #000;
+      width: 50mm;
+      margin-top: 14mm;
+    }
 
     /* Razítko – zmenšit pro tisk */
     .razitko-img { width: 28mm !important; height: 28mm !important; }
+
+    /* Celkové posouzení – větší font */
+    .proto-section:last-of-type .row span {
+      font-size: 9.5pt !important;
+      font-weight: 700 !important;
+    }
+
+    /* Zlom stránky */
+    .page-break-after { page-break-after: always !important; }
 
     /* Skrýt tlačítka v protokolu */
     #protokol-obsah ~ .btn { display: none !important; }
